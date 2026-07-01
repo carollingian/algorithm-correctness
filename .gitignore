@@ -4,7 +4,9 @@
 # Rocq generated makefiles and configurations
 src/_RocqProject
 src/*_make.mk
+src/*_make.mk.d
 src/*.mk.conf
+src/.lia.cache
 
 # Compiled Rocq object files and dependencies
 *.vo
