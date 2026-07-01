@@ -1,0 +1,37 @@
+# ==========================================
+# Rocq / Coq Build Artifacts
+# ==========================================
+# Rocq generated makefiles and configurations
+src/_RocqProject
+src/*_make.mk
+src/*.mk.conf
+
+# Compiled Rocq object files and dependencies
+*.vo
+*.vos
+*.vok
+*.v.d
+*.glob
+.*.aux
+
+# ==========================================
+# LaTeX Generated Documentation
+# ==========================================
+# Intermediate LaTeX files generated during pdflatex compilation
+latex/*.aux
+latex/*.log
+latex/*.out
+latex/*.bbl
+latex/*.blg
+latex/*.toc
+latex/*.pag
+
+# Rocqdoc generated LaTeX source
+latex/*.v.tex
+
+# ==========================================
+# Standard OS & Editor Files (Optional but recommended)
+# ==========================================
+.DS_Store
+*~
+*.swp
