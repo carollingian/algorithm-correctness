@@ -89,8 +89,47 @@ Proof. Admitted.
 
 (** ** Lemas auxiliares de equivalência *)
 
-(** Colocar aqui as provas direcionais que servem de base para os 
-   teoremas principais. *)
+(** *** Lemas para a prova de [ord1_equiv_ord2] *)
+
+(** Para provarmos a equivalência entre as definições indutivas [ord1] e [ord2]
+ ([ord1 <-> ord2]), trataremos uma implicância de cada vez. Primeiro [ord1 -> ord2] e,
+ em seguida, [ord2 -> ord2]. *)
+
+(** **** Lema  [ord1_to_ord2] *)
+
+Lemma ord1_to_ord2 : forall l, ord1 l -> ord2 l.
+Proof.
+  intros l H. induction H.
+  - (* caso nil *)
+    apply ord2_nil.
+  - (* caso um elemento *)
+    apply ord2_all.
+    + unfold le_all. intros y Hy. inversion Hy. (* y não pode estar em nil *)
+    + apply ord2_nil.
+  - (* caso dois ou mais elementos *)
+    apply ord2_all.
+    + unfold le_all. intros z Hz. destruct Hz as [Heq | Hin].
+      * subst. assumption. (* z é igual a y *)
+      * (* z está no resto da lista l *)
+        inversion IHord1. subst.
+        unfold le_all in H3. apply H3 in Hin. lia.
+    + assumption.
+Qed.
+
+(** **** Lema  [ord2_to_ord1] *)
+
+Lemma ord2_to_ord1 : forall l, ord2 l -> ord1 l.
+Proof.
+  intros l H. induction H.
+  - (* caso nil *)
+    apply ord1_nil.
+  - (* caso x :: l *)
+    destruct l as [| y l'].
+    + apply ord1_one.
+    + apply ord1_all.
+      * unfold le_all in H. apply H. simpl. left. reflexivity.
+      * assumption.
+Qed.
 
 (** ** Teoremas principais *)
 
@@ -99,7 +138,10 @@ Proof. Admitted.
 
 Theorem ord1_equiv_ord2: forall l, ord1 l <-> ord2 l.
 Proof.
-Admitted.
+  split; intro H.
+  - apply ord1_to_ord2; assumption.
+  - apply ord2_to_ord1; assumption.
+Qed.
 
 Theorem ord1_equiv_ord3: forall l, ord1 l <-> ord3 l.
 Proof.
