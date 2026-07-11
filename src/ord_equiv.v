@@ -97,6 +97,29 @@ Proof. Admitted.
 
 (** **** Lema  [ord1_to_ord2] *)
 
+(** prova [ord1 -> ord2], ou seja, que toda lista ord1 também é ord2.
+  A base utilizada é baseada na divisão de [ord1] em três regras de formação, executada
+  pela tática [induction H], que divide a prova em três casos: *)
+
+(** 
+  1. Caso [nil]: utilizada a tática apply [ord2_nil], que prova que uma lista vazia pelas 
+  regras de [ord1] também é vazia pelas regras de [ord2].
+  2. Caso de um elemento ([x :: nil]): prova feita com [ord2_all], que exige que
+    - [x] seja menor ou igual a todos os elementos do resto da lista ([x <=* nil]). 
+    Como a lista [nil] não tem elementos, isso é uma verdade vazia. 
+    A tática [inversion Hy] verifica que não faz sentido ter elementos em [nil] e finaliza o problema.
+    - o resto da lista esteja ordenado ([ord2 nil]), o que é resolvido com apply [ord2_nil].
+  3. Caso de dois ou mais elementos ([x :: y :: l]): Sabe-se por hipótese que [x <= y] e 
+  que o resto da lista ([y :: l]) está ordenado. Logo, provar [ord2 (x :: y :: l)]. 
+  Isso se faz ao provar que [x] é menor ou igual a todos os elementos de [y :: l] ([x <=* y :: l])
+  quando se aplica [ord2_all]. Isso é possível com auxílio de um elemento qualquer ([z]) dessa lista.
+  Ele pode ser duas coisas e resolvido com [destruct Hz]
+    - Ele é o próprio [y]: Se [z] é [y], a hipótese [x <= y] já resolve o problema ([subst. assumption.]).
+    -Ele está dentro de [l]: Aqui depende de Hipótese de Indução ([IHord1]), que garante que [y :: l] já é [ord2]. 
+    Usando inversion sobre essa hipótese, [y] é menor que todos os elementos de [l] ([y <= z]). 
+    Como [x <= y] e [y <= z], a tática matemática [lia] usa transitividade para concluir que [x <= z].
+*)
+
 Lemma ord1_to_ord2 : forall l, ord1 l -> ord2 l.
 Proof.
   intros l H. induction H.
