@@ -103,21 +103,23 @@ Proof. Admitted.
 
 (** 
   1. Caso [nil]: utilizada a tática apply [ord2_nil], que prova que uma lista vazia pelas 
-  regras de [ord1] também é vazia pelas regras de [ord2].
+    regras de [ord1] também é vazia pelas regras de [ord2].
+  
   2. Caso de um elemento ([x :: nil]): prova feita com [ord2_all], que exige que
     - [x] seja menor ou igual a todos os elementos do resto da lista ([x <=* nil]). 
-    Como a lista [nil] não tem elementos, isso é uma verdade vazia. 
-    A tática [inversion Hy] verifica que não faz sentido ter elementos em [nil] e finaliza o problema.
+      Como a lista [nil] não tem elementos, isso é uma verdade vazia. 
+      A tática [inversion Hy] verifica que não faz sentido ter elementos em [nil] e finaliza o problema.
     - o resto da lista esteja ordenado ([ord2 nil]), o que é resolvido com apply [ord2_nil].
+  
   3. Caso de dois ou mais elementos ([x :: y :: l]): Sabe-se por hipótese que [x <= y] e 
-  que o resto da lista ([y :: l]) está ordenado. Logo, provar [ord2 (x :: y :: l)]. 
-  Isso se faz ao provar que [x] é menor ou igual a todos os elementos de [y :: l] ([x <=* y :: l])
-  quando se aplica [ord2_all]. Isso é possível com auxílio de um elemento qualquer ([z]) dessa lista.
-  Ele pode ser duas coisas e resolvido com [destruct Hz]
+    que o resto da lista ([y :: l]) está ordenado. Logo, provar [ord2 (x :: y :: l)]. 
+    Isso se faz ao provar que [x] é menor ou igual a todos os elementos de [y :: l] ([x <=* y :: l])
+    quando se aplica [ord2_all]. Isso é possível com auxílio de um elemento qualquer ([z]) dessa lista.
+    Ele pode ser duas coisas e resolvido com [destruct Hz]
     - Ele é o próprio [y]: Se [z] é [y], a hipótese [x <= y] já resolve o problema ([subst. assumption.]).
-    -Ele está dentro de [l]: Aqui depende de Hipótese de Indução ([IHord1]), que garante que [y :: l] já é [ord2]. 
-    Usando inversion sobre essa hipótese, [y] é menor que todos os elementos de [l] ([y <= z]). 
-    Como [x <= y] e [y <= z], a tática matemática [lia] usa transitividade para concluir que [x <= z].
+    - Ele está dentro de [l]: Aqui depende de hipótese de indução ([IHord1]), que garante que [y :: l] já é [ord2]. 
+      Usando inversion sobre essa hipótese, [y] é menor que todos os elementos de [l] ([y <= z]). 
+      Como [x <= y] e [y <= z], a tática matemática [lia] usa transitividade para concluir que [x <= z].
 *)
 
 Lemma ord1_to_ord2 : forall l, ord1 l -> ord2 l.
@@ -140,6 +142,24 @@ Proof.
 Qed.
 
 (** **** Lema  [ord2_to_ord1] *)
+
+(** prova o contrário [ord2 -> ord1]. Como a [ord2] só possui 
+duas regras de formação, a indução gera apenas dois casos: *)
+
+(** 
+  1. Caso [nil]: Resolvido com [apply ord1_nil].
+  
+  2. Caso de um ou mais elementos ([x :: l]): Sabe-se [x <=* l] e que, por hipótese, 
+    a lista [l] atende aos critérios da definição de [ord1]. O problema é resolver o 
+    fato de [ord1] ter regras diferentes para listas com 1 e listas com 2+ elementos.
+    Por isso, a tática [destruct l as [| y l']] analisa dois subcasos da própria lista [l]
+    - Se [l] for [nil]: Então a lista original é apenas [x], resolvido com a regra [apply ord1_one].
+    - Se [l] tem elementos ([y :: l']): Então a lista original é [x :: y :: l']. 
+      A regra que funciona para isso é [ord1_all], que exige que
+      -x <= y: Como [x] é menor ou igual a todos os elementos da lista [y :: l'], basta aplicar 
+        [apply H] apontando que [y] é o primeiro elemento da lista ([left. reflexivity.]).
+      - [y :: l'] está ordenado em [ord1]: a hipótese de indução já assume isso ([assumption.]).
+*)
 
 Lemma ord2_to_ord1 : forall l, ord2 l -> ord1 l.
 Proof.
