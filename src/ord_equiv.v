@@ -93,7 +93,7 @@ Proof. Admitted.
 
 (** Para provarmos a equivalência entre as definições indutivas [ord1] e [ord2]
  ([ord1 <-> ord2]), trataremos uma implicância de cada vez. Primeiro [ord1 -> ord2] e,
- em seguida, [ord2 -> ord2]. *)
+ em seguida, [ord2 -> ord1]. *)
 
 (** **** Lema  [ord1_to_ord2] *)
 
@@ -127,11 +127,11 @@ Proof.
   intros l H. induction H.
   - (* caso nil *)
     apply ord2_nil.
-  - (* caso um elemento *)
+  - (* caso x :: l *)
     apply ord2_all.
     + unfold le_all. intros y Hy. inversion Hy. (* y não pode estar em nil *)
     + apply ord2_nil.
-  - (* caso dois ou mais elementos *)
+  - (* caso x :: y :: l *)
     apply ord2_all.
     + unfold le_all. intros z Hz. destruct Hz as [Heq | Hin].
       * subst. assumption. (* z é igual a y *)
@@ -149,14 +149,14 @@ duas regras de formação, a indução gera apenas dois casos: *)
 (** 
   1. Caso [nil]: Resolvido com [apply ord1_nil].
   
-  2. Caso de um ou mais elementos ([x :: l]): Sabe-se [x <=* l] e que, por hipótese, 
+  2. Caso de um ou mais elementos ([x :: l]): Sabe-se que [x <=* l] e que, por hipótese, 
     a lista [l] atende aos critérios da definição de [ord1]. O problema é resolver o 
     fato de [ord1] ter regras diferentes para listas com 1 e listas com 2+ elementos.
     Por isso, a tática [destruct l as [| y l']] analisa dois subcasos da própria lista [l]
     - Se [l] for [nil]: Então a lista original é apenas [x], resolvido com a regra [apply ord1_one].
     - Se [l] tem elementos ([y :: l']): Então a lista original é [x :: y :: l']. 
       A regra que funciona para isso é [ord1_all], que exige que
-      -x <= y: Como [x] é menor ou igual a todos os elementos da lista [y :: l'], basta aplicar 
+      - x <= y: Como [x] é menor ou igual a todos os elementos da lista [y :: l'], basta aplicar 
         [apply H] apontando que [y] é o primeiro elemento da lista ([left. reflexivity.]).
       - [y :: l'] está ordenado em [ord1]: a hipótese de indução já assume isso ([assumption.]).
 *)
@@ -174,6 +174,89 @@ Proof.
       * assumption.
 Qed.
 
+(** *** Lemas para a prova de [ord1_equiv_ord3] *)
+
+(** Para provarmos a equivalência entre as definições indutivas [ord1] e [ord3]
+ ([ord1 <-> ord3]), trataremos uma implicância de cada vez. Primeiro [ord1 -> ord3] e,
+ em seguida, [ord3 -> ord1]. *)
+
+(** **** Lema  [ord1_to_ord3] *)
+
+(** é baseado em indução sobre a hipótese de ordenação H, porque ord1 é uma definição indutiva.
+Por isso, [intros l H. induction H] inicia a prova trazendo a hipótese de que a lista é [ord1]. 
+A indução cria três casos exatamente correspondentes às três regras de formação de ord1 *)
+
+(** 
+  1. Caso [nil]: A lista está vazia. O lema [ord3_nil] resolve este caso rapidamente.
+  
+  2. Caso de um elemento ([x :: nil]): A lista possui apenas um elemento. Novamente, 
+    o lema auxiliar ord3_one resolve isso direto.
+  
+  3. Caso de dois ou mais elementos ([x :: y :: l]): Sabemos por hipótese que [x <= y]
+    e que o restante da lista está ordenado sob [ord1]. É necessário abrir a definição de [ord3]
+    e provar a ordenação para um índice genérico i, que pode ser
+    - [i = 0]: É o primeiro elemento da lista. O comando [simpl] resolve as funções [nth], 
+      revelando que precisamos provar que [x <= y]. Como essa era a premissa fundamental da regra de [ord1], 
+      o comando assumption fecha o subcaso.
+    - i > 0: Comparação com elementos mais profundos na lista. 
+      O comando [simpl in *] destaca a sublista [y :: l]. [apply IHord1] (a hipótese de indução), 
+      garante que a sublista obedece à regra de índices. Os dois comandos 
+      [lia] finais apenas confirmam matematicamente que o índice atualizado não estourou o novo tamanho da lista.
+*)
+
+Lemma ord1_to_ord3 : forall l, ord1 l -> ord3 l.
+Proof.
+  intros l H. induction H.
+  - (* caso nil *)
+    apply ord3_nil.
+  - (* caso x :: l *)
+    apply ord3_one.
+  - (* caso x :: y :: l *)
+    unfold ord3 in *. intros i Hlen Hlt.
+    destruct i.
+    + (* subcaso i = 0, comparando o primeiro elemento com o segundo *)
+      simpl. assumption.
+    + (* subcaso i > 0, comparando elementos no resto da lista *)
+      simpl in *. apply IHord1.
+      * (* Prova que o tamanho da sublista é maior que 1 *)
+        lia.
+      * (* Prova que o índice S i ainda é menor que o tamanho da sublista *)
+        lia.
+Qed.
+
+(** **** Lema  [ord3_to_ord1] *)
+
+(** é indução sobre a estrutura da lista l, pois [ord3] não é indutivo. Primeiro, ao
+iniciar a lista e a indução, divide o problema em [l nill] ou lista [x :: y :: l]. *)
+
+(** 
+  1. Caso [nil]: A hipótese diz que ela é ord3. Aplica-se [ord1_nil] direto para fechar o caso.
+
+  2. Caso de um ou mais elementos ([x :: l']): [ord1] trata listas de um elemento de forma diferente 
+    de listas com 2 ou mais elementos. Por isso, necessário quebrar o caso em dois subcasos
+    - Subcaso de um elemento ([x :: nil]): A lista é exatamente [x]. O comando [apply ord1_one] encerra a prova.
+    - Subcaso de dois ou mais elementos ([x :: l'']): necessário aplicar a regra principal [apply ord1_all].
+*)
+
+Lemma ord3_to_ord1 : forall l, ord3 l -> ord1 l.
+Proof.
+  intros l. induction l as [| x l' IH].
+  - (* Caso 1: Lista vazia *)
+    intro H. apply ord1_nil.
+  - (* Caso 2: Lista com elementos *)
+    intro H. destruct l' as [| y l''].
+    + (* Subcaso: Apenas 1 elemento na lista *)
+      apply ord1_one.
+    + (* Subcaso: 2 ou mais elementos (x :: y :: l'') *)
+      apply ord1_all.
+      * (* Precisamos provar que x <= y. O índice 0 no ord3 nos dá isso. *)
+        unfold ord3 in H. specialize (H 0).
+        simpl in *. apply H; lia.
+      * (* Precisamos provar que o resto (y :: l'') é ord1 via Hipótese de Indução *)
+        apply IH. unfold ord3 in *. intros i Hlen Hlt.
+        specialize (H (S i)). simpl in *. apply H; lia.
+Qed.
+
 (** ** Teoremas principais *)
 
 (** O objetivo principal desta proposta é mostrar que as definições 
@@ -188,7 +271,10 @@ Qed.
 
 Theorem ord1_equiv_ord3: forall l, ord1 l <-> ord3 l.
 Proof.
-Admitted.
+  split; intro H.
+  - apply ord1_to_ord3; assumption.
+  - apply ord3_to_ord1; assumption.
+Qed.
 
 Theorem ord1_equiv_ord4: forall l, ord1 l <-> ord4 l.
 Proof.
