@@ -257,30 +257,7 @@ Proof.
         specialize (H (S i)). simpl in *. apply H; lia.
 Qed.
 
-(** ** Teoremas principais *)
-
-(** O objetivo principal desta proposta é mostrar que as definições 
-    [ord1], [ord2], [ord3] e [ord4] são logicamente equivalentes: *)
-
-Theorem ord1_equiv_ord2: forall l, ord1 l <-> ord2 l.
-Proof.
-  split; intro H.
-  - apply ord1_to_ord2; assumption.
-  - apply ord2_to_ord1; assumption.
-Qed.
-
-Theorem ord1_equiv_ord3: forall l, ord1 l <-> ord3 l.
-Proof.
-  split; intro H.
-  - apply ord1_to_ord3; assumption.
-  - apply ord3_to_ord1; assumption.
-Qed.
-
-Theorem ord1_equiv_ord4: forall l, ord1 l <-> ord4 l.
-Proof.
-Admitted.
-
-(** ** Lemas auxiliares para ord4 *)
+(** *** Lemas auxiliares para ord4 *)
 
 (** Para provar as equivalências finais envolvendo [ord4], precisamos de 
     duas pontes lógicas, detalhadas a seguir. *)
@@ -340,7 +317,83 @@ Proof.
     + simpl. apply IHord2; simpl in Hlen; lia. (* ambos > 0, usa hipótese de indução *)
 Qed.
 
-(** ** Teoremas Finais de Transitividade *)
+(** **** Lema [ord1_to_ord4] *)
+
+Lemma ord1_to_ord4 : forall l, ord1 l -> ord4 l.
+Proof.
+  intros l H. induction H.
+  - (* Caso 1: Lista vazia *)
+    unfold ord4. intros i j Hlt Hlen. simpl in *. lia.
+  - (* Caso 2: Lista com 1 elemento *)
+    unfold ord4. intros i j Hlt Hlen. simpl in *. lia.
+  - (* Caso 3: Lista com 2 ou mais elementos (x :: y :: l) *)
+    unfold ord4 in *. intros i j Hlt Hlen.
+    destruct i.
+    + (* Subcaso i = 0: Comparando o primeiro elemento x com o j-ésimo *)
+      destruct j.
+      * (* j = 0 *)
+        lia. (* j não pode ser 0 pois i < j *)
+      * (* j > 0 *)
+        (* Reduzimos cirurgicamente para não quebrar a estrutura da função nth *)
+        change (nth 0 (x :: y :: l) 0) with x.
+        change (nth (S j) (x :: y :: l) 0) with (nth j (y :: l) 0).
+        
+        assert (Hord2: ord2 (x :: y :: l)). { 
+          apply ord1_to_ord2. apply ord1_all; assumption. 
+        }
+        inversion Hord2. subst. unfold le_all in H3.
+        
+        apply H3. 
+        apply nth_In. simpl in *. lia.
+    + (* Subcaso i > 0: Comparando elementos no resto da lista *)
+      destruct j.
+      * (* j = 0 *)
+        lia.
+      * (* j > 0 *)
+        (* Reduzimos os índices explicitamente de novo *)
+        change (nth (S i) (x :: y :: l) 0) with (nth i (y :: l) 0).
+        change (nth (S j) (x :: y :: l) 0) with (nth j (y :: l) 0).
+        
+        apply IHord1.
+        -- lia.
+        -- simpl in *. lia.
+Qed.
+
+(** **** Lema [ord4_to_ord1] *)
+
+Lemma ord4_to_ord1 : forall l, ord4 l -> ord1 l.
+Proof.
+  intros l H.
+  apply ord3_to_ord1. (* Reutiliza a ponte de ord3 para ord1 *)
+  apply ord4_to_ord3. (* Utiliza o seu lema *)
+  assumption.
+Qed.
+
+(** ** Teoremas principais *)
+
+(** O objetivo principal desta proposta é mostrar que as definições 
+    [ord1], [ord2], [ord3] e [ord4] são logicamente equivalentes: *)
+
+Theorem ord1_equiv_ord2: forall l, ord1 l <-> ord2 l.
+Proof.
+  split; intro H.
+  - apply ord1_to_ord2; assumption.
+  - apply ord2_to_ord1; assumption.
+Qed.
+
+Theorem ord1_equiv_ord3: forall l, ord1 l <-> ord3 l.
+Proof.
+  split; intro H.
+  - apply ord1_to_ord3; assumption.
+  - apply ord3_to_ord1; assumption.
+Qed.
+
+Theorem ord1_equiv_ord4: forall l, ord1 l <-> ord4 l.
+Proof.
+  split; intro H.
+  - apply ord1_to_ord4; assumption.
+  - apply ord4_to_ord1; assumption.
+Qed.
 
 (** Os três teoremas finais concluem as equivalências do projeto. 
     Eles não necessitam de novas induções estruturais, pois podem reutilizar 

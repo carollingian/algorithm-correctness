@@ -1,5 +1,7 @@
 # Algorithm Correctness
 
+[VÍDEO APRESENTAÇÃO](https://drive.google.com/file/d/1pbRp2y0IYIbzKqvkb7QQSacvtmGswd5k/view?usp=drivesdk)
+
 ## Getting Started
 
 These instructions will help you set up the environment and build the project on your local machine. 
