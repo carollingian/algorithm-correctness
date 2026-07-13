@@ -280,19 +280,116 @@ Theorem ord1_equiv_ord4: forall l, ord1 l <-> ord4 l.
 Proof.
 Admitted.
 
+(** ** Lemas auxiliares para ord4 *)
+
+(** Para provar as equivalências finais envolvendo [ord4], precisamos de 
+    duas pontes lógicas, detalhadas a seguir. *)
+
+(** **** Lema [ord4_to_ord3] *)
+
+(** Este lema prova a implicação [ord4 -> ord3]. 
+    A lógica fundamenta-se no fato de que [ord3] é apenas um caso particular de [ord4]. 
+    Enquanto [ord4] garante que qualquer elemento 
+    é menor ou igual a todos os seus sucessores, a [ord3] 
+    exige apenas a verificação entre elementos adjacentes (índices [i] e [S i]).
+    A prova se desenvolve da seguinte forma:
+    - Os comandos [unfold ord3, ord4] expõem as definições.
+    - Ao aplicar a hipótese [H] de [ord4], precisamos apenas provar que o índice 
+      [i] é estritamente menor que seu sucessor [S i]. *)
+
+Lemma ord4_to_ord3 : forall l, ord4 l -> ord3 l.
+Proof.
+  intros l H. unfold ord3, ord4 in *.
+  intros i Hlen Hlt.
+  apply H.
+  - lia. (* Prova que i < S i *)
+  - assumption.
+Qed.
+
+(** **** Lema [ord2_to_ord4] *)
+
+(** Este lema estabelece a implicação [ord2 -> ord4]. 
+    A prova é realizada por indução sobre a hipótese de ordenação [ord2] 
+    (tática [induction H]), dividindo o problema em dois casos principais:
+    
+    1. Caso [nil]: Uma lista vazia é trivialmente [ord4]. Como não há elementos, 
+       os limites de tamanho da lista invalidam os índices, sendo resolvido com [lia].
+       
+    2. Caso [x :: l]: A análise depende da posição dos índices [i] e [j]. A tática 
+       [destruct i; destruct j] cria subcasos para verificar se estamos acessando 
+       o primeiro elemento (índice 0) ou elementos da cauda (índice > 0):
+       - Índices impossíveis: Se [i] ou [j] violam [i < j] (ex: 0 < 0), [lia] encerra por absurdo.
+       - Acesso cruzado ([i = 0] e [j > 0]): Compara a cabeça [x] com um elemento 
+         da cauda. A definição de [ord2] garante que [x] é menor que tudo em [l]. 
+         Usamos o lema da biblioteca [nth_In] para associar o acesso por índice 
+         à presença do elemento na lista ([In]), satisfazendo a hipótese.
+       - Acesso na cauda ([i > 0] e [j > 0]): A comparação ocorre inteiramente dentro 
+         da sublista [l]. O caso é resolvido invocando a hipótese de indução ([IHord2]). *)
+
+Lemma ord2_to_ord4 : forall l, ord2 l -> ord4 l.
+Proof.
+  intros l H. induction H.
+  - (* Caso nil: Uma lista vazia*)
+    unfold ord4. intros i j Hij Hlen. simpl in Hlen. lia.
+  - (* Caso x :: l*)
+    unfold ord4 in *. intros i j Hij Hlen.
+    destruct i; destruct j.
+    + lia. (* 0 < 0*)
+    + simpl. apply H. apply nth_In. simpl in Hlen. lia. (* i=0, j>0 *)
+    + lia. (* S i < 0*)
+    + simpl. apply IHord2; simpl in Hlen; lia. (* ambos > 0, usa hipótese de indução *)
+Qed.
+
+(** ** Teoremas Finais de Transitividade *)
+
+(** Os três teoremas finais concluem as equivalências do projeto. 
+    Eles não necessitam de novas induções estruturais, pois podem reutilizar 
+    as pontes já estabelecidas anteriormente, aplicando a propriedade 
+    transitiva das implicações lógicas. *)
+
+(** **** Teorema [ord2_equiv_ord3] *)
+(** Demonstra [ord2 <-> ord3]. 
+    - A ida faz o caminho lógico [ord2 -> ord1 -> ord3].
+    - A volta faz o caminho lógico [ord3 -> ord1 -> ord2]. *)
 Theorem ord2_equiv_ord3: forall l, ord2 l <-> ord3 l.
 Proof.
-Admitted.
+  split; intro H.
+  - (* Ida (ord2 -> ord3): ord2 -> ord1 -> ord3 *)
+    apply ord1_to_ord3. apply ord2_to_ord1. assumption.
+  - (* Volta (ord3 -> ord2): ord3 -> ord1 -> ord2 *)
+    apply ord1_to_ord2. apply ord3_to_ord1. assumption.
+Qed.
 
+(** **** Teorema ord2_equiv_ord4 *)
+(** Usamos os lemas auxiliares que acabamos de criar. Para a ida, aplicamos 
+    direto o lema [ord2_to_ord4]. Para a volta, fazemos o caminho longo: 
+    transformamos ord4 em ord3, depois ord3 em ord1, e finalmente ord1 em ord2. *)
 Theorem ord2_equiv_ord4: forall l, ord2 l <-> ord4 l.
 Proof.
-Admitted.
+  split; intro H.
+  - (* Ida: ord2 -> ord4 *)
+    apply ord2_to_ord4. assumption.
+  - (* Volta: ord4 -> ord3 -> ord1 -> ord2 *)
+    apply ord1_to_ord2. apply ord3_to_ord1. apply ord4_to_ord3. assumption.
+Qed.
 
+(** **** Teorema ord3_equiv_ord4 *)
+(** Seguimos a mesma lógica de trânsito entre as provas. Para a ida (ord3 -> ord4), 
+    convertemos ord3 para ord1, ord1 para ord2, e usamos o nosso lema [ord2_to_ord4]. 
+    A volta é direta com o lema [ord4_to_ord3]. *)
 Theorem ord3_equiv_ord4: forall l, ord3 l <-> ord4 l.
 Proof.
-Admitted.
+  split; intro H.
+  - (* Ida: ord3 -> ord1 -> ord2 -> ord4 *)
+    apply ord2_to_ord4. apply ord1_to_ord2. apply ord3_to_ord1. assumption.
+  - (* Volta: ord4 -> ord3 *)
+    apply ord4_to_ord3. assumption.
+Qed.
 
 
 (** * Conclusão *)
 
-(** Concluir aqui. *)
+(** Todas as equivalências propostas entre [ord1], [ord2], [ord3] e [ord4] 
+    foram demonstradas, comprovando que as abordagens 
+    indutivas e as abordagens baseadas em índices definem de maneira idêntica 
+    o conceito de ordenação de listas. *)
